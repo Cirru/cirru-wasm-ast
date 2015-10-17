@@ -1,5 +1,5 @@
 
 \ (void mul) ()
-  forever
+  forever $ do
     continue
     break

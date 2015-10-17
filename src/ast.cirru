@@ -23,7 +23,7 @@ var
   :type :Builtin
   :result undefined
   :method :undefined
-  arguments $ []
+  :arguments $ []
 
 = exports.CallExpression $ fromJS $ {}
   :type :CallExpression
@@ -116,4 +116,4 @@ var
   :type :VariableDeclaration
   :id undefined
   :result undefined
-  init undefined
+  :init undefined
