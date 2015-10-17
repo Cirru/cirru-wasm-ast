@@ -1,6 +1,5 @@
-void mul() {
-  forever {
-    continue;
-    break;
-  }
-}
+
+\ (void mul) ()
+  forever
+    continue
+    break

@@ -1,11 +1,10 @@
-import resize_memory, log from std
 
-void mul(i32 a, i32 b) {
-  resize_memory(a);
-}
+import std (resize_memory log)
 
-void div(i32 a, i32 b) {
-  std::assert(a);
-}
+\ (void mul) ((i32 a) (i32 b))
+  resize_memory a
 
-export mul, div
+\ (void div) ((i32 a) (i32 b))
+  std::assert a
+
+export mul div

@@ -1,6 +1,5 @@
-i64 mul(i64 a) {
-  if (a)
-    return a;
-  else
-    return i64.const(1);
-}
+
+\ (i64 mul) ((i64 a))
+  if a
+    do $ return a
+    do $ return $ i64.const 1
