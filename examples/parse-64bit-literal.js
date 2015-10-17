@@ -1,6 +1,6 @@
 BN = require('bn.js');
 
-exports = [
+module.exports = [
   {
     type: 'ReturnStatement',
     argument: {
