@@ -33,6 +33,7 @@
     "cirru-script": "0.4.26",
     "cirru-script-loader": "0.4.26",
     "gulp-cirru-script": "0.4.26",
+    "raw-loader": "^0.5.1",
     "webpack": "^1.12.2",
     "webpack-dev-server": "^1.12.0"
   }

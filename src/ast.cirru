@@ -61,6 +61,7 @@ var
   :result :undefined
   :params $ []
   :body $ []
+  :localCount 0
 
 = exports.FunctionRef $ fromJS $ {}
   :type :FunctionRef

@@ -20,8 +20,8 @@ var
 
   :module $ {}
     :loaders $ []
-      {} (:test /\.cirru$) (:loader :cirru-script) (:ignore /examples)
-      {} (:test /\.cirru-text$) (:loader :raw)
+      {} (:test "/(src|test).+\.cirru$") (:loader :cirru-script) (:ignore /examples)
+      {} (:test "/(examples).+\.cirru$") (:loader :raw)
 
   :plugins $ []
     new webpack.optimize.CommonsChunkPlugin :vendor :vendor.js
