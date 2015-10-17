@@ -1,0 +1,30 @@
+{
+  "name": "cirru-wasm-ast",
+  "version": "0.0.1",
+  "description": "Cirru AST to wasm-ast transformer",
+  "main": "lib/transfomer.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Cirru/cirru-wasm-ast.git"
+  },
+  "keywords": [
+    "cirru",
+    "wasm",
+    "ast"
+  ],
+  "author": "jiyinyiyong",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Cirru/cirru-wasm-ast/issues"
+  },
+  "homepage": "https://github.com/Cirru/cirru-wasm-ast#readme",
+  "dependencies": {
+    "bn.js": "^3.2.0"
+  }
+}
