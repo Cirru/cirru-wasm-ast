@@ -25,6 +25,15 @@
   },
   "homepage": "https://github.com/Cirru/cirru-wasm-ast#readme",
   "dependencies": {
-    "bn.js": "^3.2.0"
+    "bn.js": "^3.2.0",
+    "cirru-parser": "^0.10.7",
+    "immutable": "^3.7.5"
+  },
+  "devDependencies": {
+    "cirru-script": "0.4.26",
+    "cirru-script-loader": "0.4.26",
+    "gulp-cirru-script": "0.4.26",
+    "webpack": "^1.12.2",
+    "webpack-dev-server": "^1.12.0"
   }
 }
