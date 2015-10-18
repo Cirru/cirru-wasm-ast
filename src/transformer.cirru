@@ -58,9 +58,15 @@ var transform $ \ (state tree inline)
         (? $ operator.match /^addr\.) $ transformBuiltin state tree
         (? $ operator.match /::) $ transformExternal state tree
         (state.hasIn $ [] :externals operator)
-          transformCallExternal state tree
+          cond inline
+            transformCallExternal state tree
+            state.set :result $ ast.ExpressionStatement.set :expression
+              extract $ transformCallExternal state tree
         (state.hasIn $ [] :functions operator)
-          transformCallFunction state tree
+          cond inline
+            transformCallFunction state tree
+            state.set :result $ ast.ExpressionStatement.set :expression
+              extract $ transformCallFunction state tree
         else $ state.set :result :UNKNOWN
 
 var transformFunction $ \ (state tree)

@@ -43,7 +43,7 @@ var
   :names $ []
 
 = exports.ExpressionStatement $ fromJS $ {}
-  :type :ExportStatement
+  :type :ExpressionStatement
   :expression undefined
 
 = exports.External $ fromJS $ {}
