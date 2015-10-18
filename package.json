@@ -1,6 +1,6 @@
 {
   "name": "cirru-wasm-ast",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Cirru AST to wasm-ast transformer",
   "main": "lib/transformer.js",
   "directories": {

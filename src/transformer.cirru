@@ -31,8 +31,6 @@ var transformProgram $ \ (initialState tree)
 var bind $ \ (v k) (k v)
 
 var transform $ \ (state tree inline)
-  console.log
-    JSON.stringify $ state.get :functions
   case (typeof tree)
     :string $ transformToken state tree
     else $ bind (tree.get 0) $ \ (operator) $ case operator
@@ -53,21 +51,24 @@ var transform $ \ (state tree inline)
       :export $ transformExport state tree
       :import $ transformImport state tree
       else $ case true
-        (? $ operator.match /^i64\.) $ transformBuiltin state tree
-        (? $ operator.match /^i32\.) $ transformBuiltin state tree
-        (? $ operator.match /^addr\.) $ transformBuiltin state tree
-        (? $ operator.match /::) $ transformExternal state tree
+        (? $ operator.match /^i64\.)
+          wrappedExpression state inline $ transformBuiltin state tree
+        (? $ operator.match /^i32\.)
+          wrappedExpression state inline $ transformBuiltin state tree
+        (? $ operator.match /^addr\.)
+          wrappedExpression state inline $ transformBuiltin state tree
+        (? $ operator.match /::)
+          wrappedExpression state inline $ transformExternal state tree
         (state.hasIn $ [] :externals operator)
-          cond inline
-            transformCallExternal state tree
-            state.set :result $ ast.ExpressionStatement.set :expression
-              extract $ transformCallExternal state tree
+          wrappedExpression state inline $ transformCallExternal state tree
         (state.hasIn $ [] :functions operator)
-          cond inline
-            transformCallFunction state tree
-            state.set :result $ ast.ExpressionStatement.set :expression
-              extract $ transformCallFunction state tree
+          wrappedExpression state inline $ transformCallFunction state tree
         else $ state.set :result :UNKNOWN
+
+var wrappedExpression $ \ (state inline generatedState)
+  cond inline generatedState
+    state.set :result $ ast.ExpressionStatement.set :expression
+      extract generatedState
 
 var transformFunction $ \ (state tree)
   var functionItem $ tree.get 1
@@ -80,7 +81,7 @@ var transformFunction $ \ (state tree)
         set :name functionName
         set :index 0
       set :result $ ast.Type.set :name $ functionItem.get 0
-      set :params $ extract $ argumentItems.map $ \ (item index)
+      set :params $ argumentItems.map $ \ (item index)
         ... ast.ParamDeclaration
           set :result $ ast.Type.set :name $ item.get 0
           set :name $ ... ast.Param
@@ -99,6 +100,10 @@ var transformReturn $ \ (state tree)
 
 var transformToken $ \ (state token)
   state.set :result $ case true
+    (state.hasIn $ [] :functions token)
+      state.getIn $ [] :functions token
+    (state.hasIn $ [] :externals token)
+      state.getIn $ [] :externals token
     (? $ token.match /^0x) $ ast.Literal.set :value $ new BN token 16
     (? $ token.match /^\d) $ ast.Literal.set :value $ new BN token 16
     (? $ token.match /^\w) $ ast.Identifier.set :name token
@@ -114,8 +119,8 @@ var transformBuiltin $ \ (state tree)
   state.set :result $ ... ast.Builtin
     set :result $ ast.Type.set :name typeName
     set :method method
-    set :arguments $ extract $ argumentItems.map $ \ (item)
-      transform state item
+    set :arguments $ argumentItems.map $ \ (item)
+      extract $ transform state item true
 
 var transformAssignment $ \ (state tree)
   state.set :result $ ... ast.AssignmentExpression
@@ -212,7 +217,7 @@ var transformCallExternal $ \ (state tree)
   state.set :result $ ... ast.CallExpression
     set :fn fn
     set :arguments $ argumentItems.map $ \ (item)
-      extract $ transform state item
+      extract $ transform state item true
 
 var transformCallFunction $ \ (state tree)
   var operator $ tree.get 0
@@ -221,7 +226,7 @@ var transformCallFunction $ \ (state tree)
   state.set :result $ ... ast.CallExpression
     set :fn fn
     set :arguments $ argumentItems.map $ \ (item)
-      extract $ transform state item
+      extract $ transform state item true
 
 var transformExternal $ \ (state tree)
   var
@@ -232,7 +237,7 @@ var transformExternal $ \ (state tree)
     argumentItems $ tree.slice 1
   state.set :result $ ... ast.CallExpression
     set :fn $ ... ast.External
-      set :module $ ast.Identifier.set :name module
-      set :name $ ast.Identifier.set :name name
+      set :module module
+      set :name name
     set :arguments $ argumentItems.map $ \ (item)
-      extract $ transform state item
+      extract $ transform state item true
