@@ -10,153 +10,172 @@ var
 var
   fromJS Immutable.fromJS
 
+var
+  extract $ \ (state)
+    state.get :result
+
 = exports.parse $ \ (code filename)
   var tree $ fromJS $ parser.pare code $ or filename :
-  exports.transform tree
+  var initialState $ fromJS $ {}
+    :functions $ {}
+    :externals $ {}
+    :variables $ {}
+    :result null
+  transformProgram initialState tree
 
-= exports.transform $ \ (tree)
+var transformProgram $ \ (initialState tree)
   var result $ ast.Program.set :body
-    transformLines tree
+    extract $ transformLines initialState tree
   result.toJS
 
 var bind $ \ (v k) (k v)
 
-var transform $ \ (tree inline)
+var transform $ \ (state tree inline)
   case (typeof tree)
-    :string $ transformToken tree
+    :string $ transformToken state tree
     else $ bind (tree.get 0) $ \ (operator) $ case operator
-      :\ $ transformFunction tree
-      :return $ transformReturn tree
+      :\ $ transformFunction state tree
+      :return $ transformReturn state tree
       := $ cond inline
-        transformAssignment tree
+        transformAssignment state tree
         ast.ExpressionStatement.set :expression
-          transformAssignment tree
-      :if $ transformIf tree
-      :sequence $ transformSequence tree
-      :var $ transformVariable tree
-      :do $ transformBlock tree
-      :do-while $ transformDoWhile tree
-      :forever $ transformForever tree
-      :continue $ transformContinue tree
-      :break $ transformBreak tree
-      :export $ transformExport tree
-      :import $ transformImport tree
+          transformAssignment state tree
+      :if $ transformIf state tree
+      :sequence $ transformSequence state tree
+      :var $ transformVariable state tree
+      :do $ transformBlock state tree
+      :do-while $ transformDoWhile state tree
+      :forever $ transformForever state tree
+      :continue $ transformContinue state tree
+      :break $ transformBreak state tree
+      :export $ transformExport state tree
+      :import $ transformImport state tree
       else $ case true
-        (? $ operator.match /^i64\.) $ transformBuiltin tree
-        (? $ operator.match /^i32\.) $ transformBuiltin tree
-        (? $ operator.match /^addr\.) $ transformBuiltin tree
-        else :UNKNOWN
+        (? $ operator.match /^i64\.) $ transformBuiltin state tree
+        (? $ operator.match /^i32\.) $ transformBuiltin state tree
+        (? $ operator.match /^addr\.) $ transformBuiltin state tree
+        else $ state.set :result :UNKNOWN
 
-var transformFunction $ \ (tree)
+var transformFunction $ \ (state tree)
   var functionName $ tree.get 1
   var argumentItems $ tree.get 2
   var body $ tree.slice 3
-  ... ast.Function
+  state.set :result $ ... ast.Function
     set :name $ ... ast.FunctionRef
       set :name $ functionName.get 1
       set :index 0
     set :result $ ast.Type.set :name $ functionName.get 0
-    set :params $ argumentItems.map $ \ (item index)
+    set :params $ extract $ argumentItems.map $ \ (item index)
       ... ast.ParamDeclaration
         set :result $ ast.Type.set :name $ item.get 0
         set :name $ ... ast.Param
           set :name $ item.get 1
           set :index index
-    set :body $ transformLines body
+    set :body $ extract $ transformLines state body
 
-var transformReturn $ \ (tree)
+var transformReturn $ \ (state tree)
   var argument $ tree.get 1
-  ast.ReturnStatement.set :argument
+  state.set :result $ extract $ ast.ReturnStatement.set :argument
     cond (? argument)
       transform argument true
       , null
 
-var transformToken $ \ (token)
-  case true
+var transformToken $ \ (state token)
+  state.set :result $ case true
     (? $ token.match /^0x) $ ast.Literal.set :value $ new BN token 16
     (? $ token.match /^\d) $ ast.Literal.set :value $ new BN token 16
     (? $ token.match /^\w) $ ast.Identifier.set :name token
-    else :UNKNOWN
+    else $ state.set :result :UNKNOWN
 
-var transformBuiltin $ \ (tree)
+var transformBuiltin $ \ (state tree)
   var
     operator $ tree.get 0
     argumentItems $ tree.slice 1
     pieces $ operator.split :.
     typeName $ . pieces 0
     method $ . pieces 1
-  ... ast.Builtin
+  state.set :result $ ... ast.Builtin
     set :result $ ast.Type.set :name typeName
     set :method method
-    set :arguments $ argumentItems.map transform
+    set :arguments $ extract $ argumentItems.map $ \ (item)
+      transform state item
 
-var transformAssignment $ \ (tree)
-  ... ast.AssignmentExpression
-    set :left $ transform $ tree.get 1
-    set :right $ transform $ tree.get 2
+var transformAssignment $ \ (state tree)
+  state.set :result $ ... ast.AssignmentExpression
+    set :left $ extract $ transform state $ tree.get 1
+    set :right $ extract $ transform state $ tree.get 2
 
-var transformIf $ \ (tree)
+var transformIf $ \ (state tree)
   var
     condition $ tree.get 1
     consequent $ tree.get 2
     alternate $ tree.get 3
-  ... ast.IfStatement
-    set :test $ transform condition
-    set :consequent $ transform consequent
-    set :alternate $ transform alternate
+  state.set :result $ ... ast.IfStatement
+    set :test $ extract $ transform state condition
+    set :consequent $ extract $ transform state consequent
+    set :alternate $ extract $ transform state alternate
 
-var transformSequence $ \ (tree)
-  ast.SequenceExpression.set :expressions
-    tree.map transform
+var transformSequence $ \ (state tree)
+  state.set :result $ ast.SequenceExpression.set :expressions
+    extract $ tree.map $ \ (item)
+      transform state item
 
-var transformVariable $ \ (tree)
+var transformVariable $ \ (state tree)
   var
     name $ tree.get 1
     init $ tree.get 2
-  ... ast.VariableDeclaration
-    set :id $ transform $ name.get 1
+  state.set :result $ ... ast.VariableDeclaration
+    extract $ set :id $ transform state $ name.get 1
     set :result $ ast.Type.set :name $ name.get 0
     set :init $ cond (? init)
-      transform init true
+      extract $ transform state init true
       , null
 
-var transformBlock $ \ (tree)
-  ast.BlockStatement.set :body
-    transformLines $ tree.slice 1
+var transformBlock $ \ (state tree)
+  state.set :result $ ast.BlockStatement.set :body
+    extract $ transformLines state $ tree.slice 1
 
-var transformDoWhile $ \ (tree)
+var transformDoWhile $ \ (state tree)
   var
     condition $ tree.get 1
     body $ tree.slice 2
-  ... ast.DoWhileStatement
-    set :test $ transform condition
-    set :body $ body.map transform
+  state.set :result $ ... ast.DoWhileStatement
+    set :test $ extract $ transform state condition
+    set :body $ extract $ transformLines state body
 
-var transformForever $ \ (tree)
-  ast.ForeverStatement.set :body
-    transform $ tree.get 1
+var transformForever $ \ (state tree)
+  state.set :result $ ast.ForeverStatement.set :body
+    extract $ transform state $ tree.get 1
 
-var transformLines $ \ (tree)
+var transformLines $ \ (state tree)
   ... tree
     filterNot $ \ (line)
       is (line.get 0) :--
-    map transform
+    reduce
+      \ (acc line)
+        var oldResult $ acc.get :result
+        var lineState $ transform acc line
+        lineState.update :result $ \ (lineResult)
+          oldResult.push lineResult
+      state.set :result $ Immutable.List
 
-var transformContinue $ \ (tree)
-  , ast.ContinueStatement
+var transformContinue $ \ (state tree)
+  state.set :result ast.ContinueStatement
 
-var transformBreak $ \ (tree)
-  , ast.BreakStatement
+var transformBreak $ \ (state tree)
+  state.set :result ast.BreakStatement
 
-var transformExport $ \ (tree)
+var transformExport $ \ (state tree)
   var names $ tree.slice 1
-  ast.ExportStatement.set :names
-    names.map transform
+  state.set :result $ ast.ExportStatement.set :names
+    names.map $ \ (name)
+      extract $ transform state name
 
-var transformImport $ \ (tree)
+var transformImport $ \ (state tree)
   var
     module $ tree.get 1
     names $ tree.get 2
-  ... ast.ImportStatement
+  state.set :result $ ... ast.ImportStatement
     set :module module
-    set :names $ names.map transform
+    set :names $ names.map $ \ (name)
+      extract $ transform state name
