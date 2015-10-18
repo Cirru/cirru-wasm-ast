@@ -19,7 +19,7 @@ Working in progress...
 ✗ parse-call-statement
 ✓ parse-do_while-loop
 ✓ parse-empty-ReturnStatement
-✗ parse-export-import
+✓ parse-export-import
 ✓ parse-forever-loop-with-break-continue
 ✓ parse-forever-loop
 ✓ parse-literal

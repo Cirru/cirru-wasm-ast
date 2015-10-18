@@ -54,6 +54,11 @@ var transform $ \ (state tree inline)
         (? $ operator.match /^i64\.) $ transformBuiltin state tree
         (? $ operator.match /^i32\.) $ transformBuiltin state tree
         (? $ operator.match /^addr\.) $ transformBuiltin state tree
+        (? $ operator.match /::) $ transformExternal state tree
+        (state.hasIn $ [] :externals operator)
+          transformCallExternal state tree
+        (state.hasIn $ [] :functions operator)
+          transformCallFunction state tree
         else $ state.set :result :UNKNOWN
 
 var transformFunction $ \ (state tree)
@@ -175,7 +180,47 @@ var transformImport $ \ (state tree)
   var
     module $ tree.get 1
     names $ tree.get 2
-  state.set :result $ ... ast.ImportStatement
-    set :module module
-    set :names $ names.map $ \ (name)
-      extract $ transform state name
+  ... state
+    update :externals $ \ (externals)
+      names.reduce
+        \ (acc name)
+          acc.set name $ ... ast.External
+            set :module $ ast.Identifier.set :name module
+            set :name $ ast.Identifier.set :name name
+        , externals
+    set :result $ ... ast.ImportStatement
+      set :module $ ast.Identifier.set :name module
+      set :names $ names.map $ \ (name)
+        extract $ transform state name
+
+var transformCallExternal $ \ (state tree)
+  var operator $ tree.get 0
+  var fn $ state.getIn $ [] :externals operator
+  var argumentItems $ tree.slice 1
+  state.set :result $ ... ast.CallExpression
+    set :fn fn
+    set :arguments $ argumentItems.map $ \ (item)
+      extract $ transform state item
+
+var transformCallFunction $ \ (state tree)
+  var operator $ tree.get 0
+  var fn $ state.getIn $ [] :functions operator
+  var argumentItems $ tree.slice 1
+  state.set :result $ ... ast.CallExpression
+    set :fn fn
+    set :arguments $ argumentItems.map $ \ (item)
+      extract $ transform state item
+
+var transformExternal $ \ (state tree)
+  var
+    operator $ tree.get 0
+    pieces $ operator.split :::
+    module $ . pieces 0
+    name $ . pieces 1
+    argumentItems $ tree.slice 1
+  state.set :result $ ... ast.CallExpression
+    set :fn $ ... ast.External
+      set :module $ ast.Identifier.set :name module
+      set :name $ ast.Identifier.set :name name
+    set :arguments $ argumentItems.map $ \ (item)
+      extract $ transform state item
