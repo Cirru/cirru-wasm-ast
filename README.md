@@ -4,8 +4,6 @@ Cirru WASM AST transfomer
 
 Based on the work of https://github.com/indutny/wasm-ast
 
-Working in progress...
-
 ```cirru
 ✓ index-params
 ✓ parse-64bit-literal
@@ -16,7 +14,7 @@ Working in progress...
 ✓ parse-basic-function
 ✓ parse-blockless-IfStatement
 ✓ parse-builtin-statement
-✗ parse-call-statement
+✓ parse-call-statement
 ✓ parse-do_while-loop
 ✓ parse-empty-ReturnStatement
 ✓ parse-export-import
@@ -24,6 +22,11 @@ Working in progress...
 ✓ parse-forever-loop
 ✓ parse-literal
 ```
+
+Todo:
+
+* `index` and `localCount` not working
+* tests
 
 ### Usage
 

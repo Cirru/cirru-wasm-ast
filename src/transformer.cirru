@@ -31,6 +31,8 @@ var transformProgram $ \ (initialState tree)
 var bind $ \ (v k) (k v)
 
 var transform $ \ (state tree inline)
+  console.log
+    JSON.stringify $ state.get :functions
   case (typeof tree)
     :string $ transformToken state tree
     else $ bind (tree.get 0) $ \ (operator) $ case operator
@@ -62,21 +64,25 @@ var transform $ \ (state tree inline)
         else $ state.set :result :UNKNOWN
 
 var transformFunction $ \ (state tree)
-  var functionName $ tree.get 1
+  var functionItem $ tree.get 1
+  var functionName $ functionItem.get 1
   var argumentItems $ tree.get 2
   var body $ tree.slice 3
-  state.set :result $ ... ast.Function
-    set :name $ ... ast.FunctionRef
-      set :name $ functionName.get 1
-      set :index 0
-    set :result $ ast.Type.set :name $ functionName.get 0
-    set :params $ extract $ argumentItems.map $ \ (item index)
-      ... ast.ParamDeclaration
-        set :result $ ast.Type.set :name $ item.get 0
-        set :name $ ... ast.Param
-          set :name $ item.get 1
-          set :index index
-    set :body $ extract $ transformLines state body
+  ... state
+    set :result $ ... ast.Function
+      set :name $ ... ast.FunctionRef
+        set :name functionName
+        set :index 0
+      set :result $ ast.Type.set :name $ functionItem.get 0
+      set :params $ extract $ argumentItems.map $ \ (item index)
+        ... ast.ParamDeclaration
+          set :result $ ast.Type.set :name $ item.get 0
+          set :name $ ... ast.Param
+            set :name $ item.get 1
+            set :index index
+      set :body $ extract $ transformLines state body
+    setIn ([] :functions functionName) $ ... ast.FunctionRef
+      set :name functionName
 
 var transformReturn $ \ (state tree)
   var argument $ tree.get 1

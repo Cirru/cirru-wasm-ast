@@ -66,7 +66,7 @@ var
 = exports.FunctionRef $ fromJS $ {}
   :type :FunctionRef
   :name undefined
-  :index undefined
+  :index 0
 
 = exports.Identifier $ fromJS $ {}
   :type :Identifier

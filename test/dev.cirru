@@ -2,7 +2,7 @@
 var
   transformer $ require :../src/transformer
 
-var name :parse-export-import
+var name :parse-call-statement
 var source $ require $ + :../examples/ name :.cirru
 var data $ require $ + :../examples/ name
 
